@@ -1,0 +1,35 @@
+name: Daily Data Pipeline Run
+
+on:
+  schedule:
+    # Runs at 01:00 UTC every day
+    - cron: '0 1 * * *'
+  workflow_dispatch: # Allows you to also run the workflow manually whenever you want
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/checkout@v4
+        # Note: If your pipeline is in Python, Node, etc., you can configure it here.
+        # For example, to set up Python, uncomment the lines below:
+        # uses: actions/setup-python@v5
+        # with:
+        #   python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          # Or npm install, bundle install, etc., depending on your project type
+
+      - name: Run pipeline script
+        run: |
+          echo "Running data pipeline..."
+          # Replace the line below with your actual execution command
+          # e.g., python main.py or node index.js
+          python script.py

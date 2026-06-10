@@ -1,35 +1,53 @@
 name: Daily Data Pipeline Run
 
+
 on:
+  # Allows manual trigger from the GitHub Actions UI
+  workflow_dispatch:
+
   schedule:
-    # Runs at 01:00 UTC every day
+    # Runs every day at 01:00 AM UTC
     - cron: '0 1 * * *'
-  workflow_dispatch: # Allows you to also run the workflow manually whenever you want
 
 jobs:
-  run-pipeline:
+  run-notebook:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    permissions:
+      contents: write
 
     steps:
-      - name: Checkout repository code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Create Service Account Key File
+        run: |
+          echo '${{ secrets.SERVICE_ACCOUNT_JSON_KEY }}' > service_account_key.json
+
       - name: Set up Python
-        uses: actions/checkout@v4
-        # Note: If your pipeline is in Python, Node, etc., you can configure it here.
-        # For example, to set up Python, uncomment the lines below:
-        # uses: actions/setup-python@v5
-        # with:
-        #   python-version: '3.10'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
       - name: Install dependencies
         run: |
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          # Or npm install, bundle install, etc., depending on your project type
+          pip install pandas requests google-auth google-api-python-client urllib3 openpyxl nbconvert jupyter pandas-gbq
 
-      - name: Run pipeline script
-        run: |
-          echo "Running data pipeline..."
-          # Replace the line below with your actual execution command
-          # e.g., python main.py or node index.js
-          python script.py
+      - name: Run Jupyter Notebook
+        # Sets the standard Google credential environment variable so pandas-gbq detects it automatically
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: service_account_key.json
+        run: jupyter nbconvert --to notebook --execute --inplace BigQuery.ipynb
+
+      - name: Clean up Service Account Key
+        # Removes the JSON key so it is never accidentally tracked or committed
+        run: rm -f service_account_key.json
+
+      - name: Commit executed notebook
+        # This step commits the executed notebook back to the repository.
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automated: Executed notebook via GitHub Actions"
+          branch: main
+          file_pattern: 'BigQuery.ipynb'

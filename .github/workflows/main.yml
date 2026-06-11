@@ -34,20 +34,20 @@ jobs:
         run: |
           pip install pandas requests google-auth google-api-python-client urllib3 openpyxl nbconvert jupyter pandas-gbq
 
-      - name: Run Jupyter Notebook
+      - name : Run Jupyter Notebook
         # Sets the standard Google credential environment variable so pandas-gbq detects it automatically
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: service_account_key.json
-        run: jupyter nbconvert --to notebook --execute --inplace BigQuery.ipynb
+        env : 
+          GOOGLE_APPLICATION_CREDENTIALS : service_account_key.json 
+        run : jupyter nbconvert --to notebook --execute --inplace CollisionsCombining.ipynb
 
       - name: Clean up Service Account Key
         # Removes the JSON key so it is never accidentally tracked or committed
         run: rm -f service_account_key.json
 
-      - name: Commit executed notebook
-        # This step commits the executed notebook back to the repository.
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Automated: Executed notebook via GitHub Actions"
-          branch: main
-          file_pattern: 'BigQuery.ipynb'
+      - name : Commit executed notebook 
+        # This step commits the executed notebook back to the repository. 
+        uses : stefanzweifel/git-auto-commit-action@v5 
+        with : 
+          commit_message : " Automated: Executed notebook via GitHub Actions " 
+          branch : main 
+          file_pattern : ' CollisionsCombining.ipynb '

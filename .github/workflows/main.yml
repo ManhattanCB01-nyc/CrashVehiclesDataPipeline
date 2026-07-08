@@ -1,5 +1,17 @@
 name: Daily Crash Vehicles Data Pipeline
+- name: Check Secret Presence
+      run: |
+        if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
+          echo "ERROR: GCP_SA_KEY is empty or not found!"
+          exit 1
+        else
+          echo "GCP_SA_KEY is detected successfully."
+        fi
 
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
 on:
   schedule:
     # Runs every day at midnight UTC

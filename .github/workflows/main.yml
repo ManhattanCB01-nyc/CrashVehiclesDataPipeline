@@ -1,51 +1,47 @@
-name: Daily Crash Vehicles Data Pipeline
-- name: Check Secret Presence
-      run: |
-        if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
-          echo "ERROR: GCP_SA_KEY is empty or not found!"
-          exit 1
-        else
-          echo "GCP_SA_KEY is detected successfully."
-        fi
+name: Run Notebook Daily
 
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: ${{ secrets.GCP_SA_KEY }}
 on:
+  # Allows manual trigger from the GitHub Actions UI
+  workflow_dispatch:
+
   schedule:
-    # Runs every day at midnight UTC
-    - cron: '0 0 * * *'
-  workflow_dispatch: # Allows you to manually trigger the workflow from the Actions tab
+    # Runs every day at 03:00 AM UTC.
+    # Adjust the cron expression to your desired UTC time.
+    - cron: '00 13 * * *'
 
 jobs:
-  run-pipeline:
+  run-notebook:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    permissions:
+      contents: write
 
     steps:
-    - name: Checkout repository code
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-        # Removed the cache line that caused the error
+      - name: Create Service Account Key File
+        run: |
+          echo '${{ secrets.SERVICE_ACCOUNT_JSON_KEY }}' > service_account_key.json
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        # Install jupyter and papermill to execute the notebook
-        pip install jupyter papermill pandas pandas-gbq google-cloud-bigquery
-        # Installs requirements.txt ONLY if you decide to add it later
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Install dependencies
+        run: |
+          pip install pandas numpy requests google-auth google-cloud-bigquery urllib3 openpyxl nbconvert jupyter geopandas shapely matplotlib seaborn
 
-    - name: Run Jupyter Notebook Pipeline
-      run: |
-        # Executes the notebook and saves the output to a temporary file
-        papermill finalcrashescode.ipynb executed_output.ipynb
+      - name: Run Jupyter Notebook
+        # Executes the notebook using nbconvert and overwrites the original with the output.
+        run: jupyter nbconvert --to notebook --execute --inplace finalcrashescode.ipynb
+
+      - name: Commit executed notebook
+        # This step commits the executed notebook back to the repository.
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automated: Executed finalcrashescode.ipynb via GitHub Actions"
+          branch: main
+          file_pattern: 'finalcrashescode.ipynb'

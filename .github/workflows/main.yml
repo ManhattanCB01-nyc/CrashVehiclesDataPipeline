@@ -28,16 +28,30 @@ jobs:
 
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
           pip install pandas requests google-auth google-api-python-client urllib3 openpyxl \
-                      nbconvert jupyter pandas-gbq geopandas shapely
+                      "jupyter_core>=5" "traitlets>=5.9,<6" "jupyter_client>=8" \
+                      "nbconvert>=7,<8" "nbclient>=0.9" notebook ipykernel \
+                      pandas-gbq geopandas shapely
+          # Make sure a "python3" kernelspec is actually registered — nbconvert --execute
+          # needs this to exist, and relying on it being pulled in transitively is a common
+          # source of opaque startup failures.
+          python -m ipykernel install --user --name python3 --display-name "Python 3"
+          jupyter kernelspec list
 
       - name: Run Jupyter Notebook
         # Executes the notebook using nbconvert and overwrites the original with the output.
         # COLLISION_DRIVE_PATH keeps all working files local to the runner (no Google Drive
         # mount available outside Colab) so the notebook's non-Colab code path is used.
+        # --debug surfaces the real traceback instead of the generic traitlets help footer
+        # if something goes wrong again; remove it once the run is stable.
         env:
           COLLISION_DRIVE_PATH: ./data/Collisions
-        run: jupyter nbconvert --to notebook --execute --inplace finalcrashescode_fixed.ipynb
+        run: |
+          jupyter nbconvert --to notebook --execute --inplace \
+            --ExecutePreprocessor.kernel_name=python3 \
+            --debug \
+            finalcrashescode_fixed.ipynb
 
       - name: Commit executed notebook
         # Commits the executed notebook back to the repository so the output is visible on GitHub.

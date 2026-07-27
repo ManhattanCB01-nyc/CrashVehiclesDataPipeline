@@ -1,62 +1,48 @@
-name: Run Crash Notebook Daily
+name: Daily Dataset Build
 
 on:
-  # Allows manual trigger from the GitHub Actions UI
-  workflow_dispatch:
   schedule:
-    # Runs every day at 13:00 UTC. Adjust to your desired UTC time.
-    - cron: '00 13 * * *'
+    # Runs at 00:00 UTC every day. You can adjust the cron schedule as needed.
+    - cron: '0 0 * * *'
+  # Allows you to trigger the workflow manually from the Actions tab
+  workflow_dispatch: 
+
+permissions:
+  contents: write # Needed to push changes back to the repository
 
 jobs:
-  run-notebook:
+  run-pipeline:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
-    permissions:
-      contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create Service Account Key File
-        run: |
-          echo '${{ secrets.SERVICE_ACCOUNT_JSON_KEY }}' > service_account_key.json
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.10' # Adjust based on your required Python version
 
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          pip install pandas requests google-auth google-api-python-client urllib3 openpyxl \
-                      "jupyter_core>=5" "traitlets>=5.9,<6" "jupyter_client>=8" \
-                      "nbconvert>=7,<8" "nbclient>=0.9" notebook ipykernel \
-                      pandas-gbq geopandas shapely
-          # Make sure a "python3" kernelspec is actually registered — nbconvert --execute
-          # needs this to exist, and relying on it being pulled in transitively is a common
-          # source of opaque startup failures.
-          python -m ipykernel install --user --name python3 --display-name "Python 3"
-          jupyter kernelspec list
+          python -m pip install --upgrade pip
+          # Install nbconvert and ipykernel to run the notebook headlessly
+          pip install nbconvert ipykernel
+          
+          # Install any other requirements your notebook needs (e.g., pandas, requests)
+          # Uncomment the line below if you have a requirements.txt file
+          # pip install -r requirements.txt
 
-      - name: Run Jupyter Notebook
-        # Executes the notebook using nbconvert and overwrites the original with the output.
-        # COLLISION_DRIVE_PATH keeps all working files local to the runner (no Google Drive
-        # mount available outside Colab) so the notebook's non-Colab code path is used.
-        # --debug surfaces the real traceback instead of the generic traitlets help footer
-        # if something goes wrong again; remove it once the run is stable.
-        env:
-          COLLISION_DRIVE_PATH: ./data/Collisions
+      - name: Execute Jupyter Notebook
         run: |
-          jupyter nbconvert --to notebook --execute --inplace \
-            --ExecutePreprocessor.kernel_name=python3 \
-            --debug \
-            finalcrashescode_fixed.ipynb
+          # Executes the notebook and overwrites it in place with the output
+          jupyter nbconvert --to notebook --execute build_cb1_dataset.ipynb --inplace
 
-      - name: Commit executed notebook
-        # Commits the executed notebook back to the repository so the output is visible on GitHub.
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Automated: Executed CB1 crash notebook via GitHub Actions"
-          branch: main
-          file_pattern: 'finalcrashescode_fixed.ipynb'
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          
+          # Check if there are any changes to commit. If there are, commit and push them.
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update daily dataset via GitHub Actions" && git push)

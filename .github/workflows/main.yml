@@ -5,7 +5,7 @@ on:
     # Runs at 00:00 UTC every day. You can adjust the cron schedule as needed.
     - cron: '0 0 * * *'
   # Allows you to trigger the workflow manually from the Actions tab
-  workflow_dispatch: 
+  workflow_dispatch:
 
 permissions:
   contents: write # Needed to push changes back to the repository
@@ -27,23 +27,23 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           # Install nbconvert and ipykernel to run the notebook headlessly
-          # Added geopandas, matplotlib, pandas, requests, and shapely
           pip install nbconvert ipykernel geopandas matplotlib pandas requests shapely openpyxl google-api-python-client pandas-gbq
-          
-          # Install any other requirements your notebook needs (e.g., pandas, requests)
-          # Uncomment the line below if you have a requirements.txt file
-          # pip install -r requirements.txt
+
+      # --- ADDED AUTHENTICATION STEP ---
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+      # ---------------------------------
 
       - name: Execute Jupyter Notebook
         run: |
-          # Executes the notebook and overwrites it in place with the output
-          jupyter nbconvert --to notebook --execute build_cb1_dataset.ipynb --inplace
+          jupyter nbconvert --execute --to notebook --inplace build_cb1_dataset.ipynb
 
       - name: Commit and push changes
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add .
-          
-          # Check if there are any changes to commit. If there are, commit and push them.
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update daily dataset via GitHub Actions" && git push)
+          git commit -m "Automated dataset build" || echo "No changes to commit"
+          git push

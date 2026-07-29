@@ -28,7 +28,7 @@ jobs:
           python -m pip install --upgrade pip
           # Install nbconvert and ipykernel to run the notebook headlessly
           # Added geopandas, matplotlib, pandas, requests, and shapely
-          run: pip install nbconvert ipykernel geopandas matplotlib pandas requests shapely openpyxl google-api-python-client google.colab
+          pip install nbconvert ipykernel geopandas matplotlib pandas requests shapely openpyxl google-api-python-client google.colab
           
           # Install any other requirements your notebook needs (e.g., pandas, requests)
           # Uncomment the line below if you have a requirements.txt file

@@ -45,13 +45,15 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           
-          # 1. Pull the latest code to prevent the "main -> main" rejection
+          # Pull latest changes to prevent the rejection error
           git pull origin main --rebase
           
-          # 2. Add ONLY your data files instead of using "git add ."
-          # REPLACE "your_dataset_file.csv" with the actual name of your output file/folder!
-          git add your_dataset_file.csv 
+          # Stage ONLY your specific dataset file (Do NOT use 'git add .')
+          # REPLACE 'build_cb1_dataset.ipynb' with the actual output file if it generates a CSV!
+          git add build_cb1_dataset.ipynb 
           
+          git commit -m "Automated dataset build" || echo "No changes to commit"
+          git push origin main
           # 3. Commit and push
           git commit -m "Automated dataset build" || echo "No changes to commit"
           git push origin main

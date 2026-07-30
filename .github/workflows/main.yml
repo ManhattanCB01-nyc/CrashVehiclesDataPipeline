@@ -40,20 +40,11 @@ jobs:
         run: |
           jupyter nbconvert --execute --to notebook --inplace build_cb1_dataset.ipynb
 
-      - name: Commit and push changes
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          
-          # Pull latest changes to prevent the rejection error
-          git pull origin main --rebase
-          
-          # Stage ONLY your specific dataset file (Do NOT use 'git add .')
-          # REPLACE 'build_cb1_dataset.ipynb' with the actual output file if it generates a CSV!
-          git add build_cb1_dataset.ipynb 
-          
-          git commit -m "Automated dataset build" || echo "No changes to commit"
-          git push origin main
-          # 3. Commit and push
-          git commit -m "Automated dataset build" || echo "No changes to commit"
-          git push origin main
+      - name: Commit executed notebook
+        # This step commits the executed notebook back to the repository.
+        # It's useful for seeing the output directly in GitHub.
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automated: Executed notebook via GitHub Actions"
+          branch: main
+          file_pattern: 'BigQuery.ipynb' # Only commits the specified notebook file

@@ -21,7 +21,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10' # Adjust based on your required Python version
+          python-version: '3.10' # Adjust based on your required Python version 
+          #please dont change anything in this.
 
       - name: Install dependencies
         run: |
@@ -47,4 +48,4 @@ jobs:
         with:
           commit_message: "Automated: Executed notebook via GitHub Actions"
           branch: main
-          file_pattern: 'BigQuery.ipynb' # Only commits the specified notebook file
+          file_pattern: 'build_cb1_dataset.ipynb' # Only commits the specified notebook file

@@ -14,3 +14,6 @@ Any questions about the code, colab, bigquery , powerbi contact - soumyasri.pere
 
 power bi visualization link - https://app.powerbigov.us/view?r=eyJrIjoiMzg2NGIxZjctZDlhYS00YmVmLWIyMTgtMDFiYTRhNTNkNGZhIiwidCI6IjMyZjU2ZmM3LTVmODEtNGUyMi1hOTViLTE1ZGE2NjUxM2JlZiJ9 
 
+build_cb1_dataset - will get the data from open nyc data where it will update daily it has its own workflow 
+
+crashesdatawithintersection - will update the map in the visualization in regards to the intersections it has the daily updating workflow as well.
